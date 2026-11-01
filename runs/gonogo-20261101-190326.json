@@ -1,0 +1,34 @@
+{
+  "checked_at": "2026-11-01T19:33:45.392504110+00:00",
+  "distinct_issuers": 331,
+  "failures": [],
+  "informational_note": "requests/bytes/wall_secs are a single uncontrolled pass; not experimental results",
+  "log": "http://127.0.0.1:8080",
+  "mismatches": {
+    "chain": 0,
+    "first_bad_index": null,
+    "kind": 0,
+    "leaf": 0,
+    "submitted_cert": 0
+  },
+  "pinned": {
+    "checkpoint": "compactlog.testbed.local\n1000192\nqMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=\n\n— compactlog.testbed.local M5jOqwAAAaGYl7S7BAMASDBGAiEA0Uz0Z0sV+IZkvSxxkS0x7bQvcxz5vHRrI5672PUbQYQCIQDQ6po7ID711uVYRGiFEZ5ny4EoAgZoe6WoELEKzglB8Q==\n",
+    "root_hash_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+    "tree_size": 1000192
+  },
+  "rfc6962": {
+    "bytes_on_wire": 5428409133,
+    "computed_root_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+    "entries": 1000192,
+    "requests": 1001,
+    "wall_secs": 127.362049694
+  },
+  "static_ct": {
+    "bytes_on_wire": 851954675,
+    "computed_root_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+    "entries": 1000192,
+    "requests": 4238,
+    "wall_secs": 54.619687974
+  },
+  "verdict": "GO"
+}

@@ -1,0 +1,43 @@
+{
+  "testbed": "C1 (CompactLog)",
+  "pinned_at": "2026-11-01T19:51:48.957838+00:00",
+  "tree_size": 1000192,
+  "root_hash_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+  "sth": {
+    "tree_size": 1000192,
+    "timestamp": 1793561852559,
+    "sha256_root_hash": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+    "tree_head_signature": "BAMARjBEAiAPA+oH1GSEwV1063CiYtT7rMuTHP/wIZs4NZZ7cSo2dAIgHoFe8WpM77xUL/6WB2Vea7J5YuvEhgpNTiCCNMBxT5E="
+  },
+  "checkpoint": "compactlog.testbed.local\n1000192\nqMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=\n\n\u2014 compactlog.testbed.local M5jOqwAAAaGYnfqbBAMASDBGAiEAz5AHD5a+l9N/yQm9YDoydFxP6dLLaerPq9MY16k0YGECIQDnMzrCbB2t8z9adKA5kUtv+zgnPAem3VTlv/tcQgG4zg==",
+  "snapshot": {
+    "file": "data/snapshots/testbed-c1-1000192-qMdOSE2u.tgz",
+    "bytes": 10527129802,
+    "sha256": "99b61aafb8385171ba89d776da4b891f435c2da747c056444e9c33dfbbbbdfb3",
+    "contains": [
+      "compactlog data volume",
+      "log signing keys"
+    ]
+  },
+  "compactlog": {
+    "commit": "1ceab9f45b383fad9cc0d9ad4746b98fa3845112",
+    "docker_image_id": "sha256:ef1bed0d12ff496608317efd08797cccbf78685390ed8312997ea0686ad554cc"
+  },
+  "slice": {
+    "dir": "data/slices/sycamore-2026h1-1000k-s786",
+    "manifest_sha256": "c26ced73c3ea2dbee3a490478410bd89364c9c61afede676462c3e1a941d5997",
+    "source_origin": "log.sycamore.ct.letsencrypt.org/2026h1",
+    "source_tree_size": 926062388,
+    "entries": 1000192,
+    "sampling": {
+      "mode": "seeded-uniform-tiles",
+      "seed": 786,
+      "population_tiles": 3617431,
+      "algorithm": "SplitMix64 + Floyd sampling over full tile indices (ctcore::sample)"
+    },
+    "x509_entries": 764458,
+    "precert_entries": 235734
+  },
+  "gonogo_report": "runs/gonogo-20261101-190326.json",
+  "gonogo_verdict": "GO"
+}
