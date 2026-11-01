@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------
+# DATA POLICY: no CT-derived data is ever committed.
+#
+# Certificates, tiles, issuer certificates, slice manifests, and testbed
+# snapshots stay on the local machine only (see README "Data policy").
+# The repository holds code, configuration, and aggregate results only.
+# ---------------------------------------------------------------------------
+data/
+
+# Belt and braces: block certificate / tile / archive files anywhere in the
+# tree, in case data is ever written outside data/.
+*.der
+*.crt
+*.cer
+*.p7b
+*.bin
+*.gz
+*.tgz
+*.tar
+*.zip
+
+# ---------------------------------------------------------------------------
+# Secrets: never commit
+#   Log signing keys live in the Docker volume and inside snapshots (data/).
+#   These patterns catch them if CompactLog is ever run outside Docker.
+# ---------------------------------------------------------------------------
+*.pem
+*.key
+**/keys/
+.env
+.env.*
+
+# ---------------------------------------------------------------------------
+# Build output
+# ---------------------------------------------------------------------------
+harness/target/
+**/target/
+
+# ---------------------------------------------------------------------------
+# Analysis (later milestones)
+# ---------------------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# OS / editor
+# ---------------------------------------------------------------------------
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/

@@ -1,0 +1,17 @@
+# Override for the cloud server. Activated on the droplet by testbed/.env:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.server.yml
+#
+# - Host networking: CompactLog listens directly on the droplet's interface,
+#   with no Docker NAT/port-forwarding hop in the measured path. Access is
+#   restricted by the DigitalOcean cloud firewall (experimenter IP only).
+# - No auto-restart: a crash during a trial must be visible, not hidden.
+# - Memory limit: leaves headroom for the OS on an 8 GiB droplet.
+# - Server config with a larger, explicit cache (Config.server.toml).
+services:
+  compactlog:
+    network_mode: host
+    ports: !reset []
+    restart: "no"
+    mem_limit: 6g
+    volumes:
+      - ./compactlog/Config.server.toml:/app/Config.toml:ro

@@ -1,0 +1,28 @@
+name: ct-testbed
+
+services:
+  compactlog:
+    build:
+      context: ./compactlog
+    image: ct-testbed/compactlog:1ceab9f
+    environment:
+      RUST_LOG: info
+    # Bound to localhost only: the testbed log must stay private.
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - compactlog-data:/data
+      - compactlog-keys:/app/keys
+    # Needed later for tc netem (network emulation) inside the container.
+    cap_add:
+      - NET_ADMIN
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+volumes:
+  compactlog-data:
+  compactlog-keys:

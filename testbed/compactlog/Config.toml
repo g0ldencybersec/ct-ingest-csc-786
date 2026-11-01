@@ -1,0 +1,30 @@
+# CompactLog configuration for the private C1 testbed.
+#
+# Validation is disabled on purpose: this log only ever receives certificates
+# replayed from a public log, it is never trusted by any browser, and it is
+# only reachable from localhost. Disabling validation means no root store or
+# temporal window is needed to accept the replayed slice.
+
+[server]
+bind_addr = "0.0.0.0:8080"
+# Used to derive the checkpoint origin line.
+base_url = "http://compactlog.testbed.local/"
+
+[storage]
+provider = "local"
+
+[storage.local]
+path = "/data"
+
+[keys]
+private_key_path = "/app/keys/private_key.pem"
+public_key_path = "/app/keys/public_key.pem"
+
+[validation]
+enabled = false
+
+# In-memory block cache for the storage engine. 64 MB is CompactLog's
+# upstream default; it is set explicitly so the value is pinned and recorded.
+# The cloud server overrides this file (see Config.server.toml).
+[cache]
+memory_block_cache_capacity_mb = 64
