@@ -4,11 +4,17 @@
 //! - `replay`: submit that slice into the private CompactLog testbed.
 //! - `gonogo`: read the testbed through BOTH APIs and verify they serve
 //!   identical data that recomputes to the published root.
+//! - `blocks`: compute reference subtree roots for aligned trial blocks.
+//! - `bench`:  one measured C1 trial (one arm, one block).
+//! - `e0`:     offline encoding analysis (byte counts only).
 
+mod bench;
+mod e0;
 mod fetch;
 mod gonogo;
 mod http;
 mod replay;
+mod sys;
 
 use std::path::PathBuf;
 
@@ -66,6 +72,57 @@ enum Cmd {
         log: String,
         /// Where to write the JSON report.
         #[arg(long, default_value = "../runs/gonogo.json")]
+        out: PathBuf,
+        #[arg(long, default_value_t = 8)]
+        concurrency: usize,
+    },
+    /// Compute reference roots of aligned blocks (verifies the full root first).
+    Blocks {
+        #[arg(long, default_value = "http://127.0.0.1:8080")]
+        log: String,
+        /// Block size is 2^k entries.
+        #[arg(long, default_value_t = 17)]
+        block_log2: u32,
+        #[arg(long, default_value = "../configs/testbed-c1-blocks.json")]
+        out: PathBuf,
+        #[arg(long, default_value_t = 8)]
+        concurrency: usize,
+    },
+    /// One measured C1 trial: read one block through one arm and verify it.
+    Bench {
+        #[arg(long, default_value = "http://127.0.0.1:8080")]
+        log: String,
+        #[arg(long, value_enum)]
+        arm: bench::Arm,
+        #[arg(long)]
+        block: u64,
+        #[arg(long, default_value = "../configs/testbed-c1-blocks.json")]
+        blocks: PathBuf,
+        /// Requests in flight (fixed across arms).
+        #[arg(long, default_value_t = 8)]
+        concurrency: usize,
+        #[arg(long)]
+        trial_id: String,
+        /// Per-request event log (JSONL).
+        #[arg(long)]
+        events: PathBuf,
+        /// Trial summary (JSON).
+        #[arg(long)]
+        summary: PathBuf,
+        /// Extra key=value pairs recorded in the summary (repeatable).
+        #[arg(long)]
+        meta: Vec<String>,
+    },
+    /// E0: offline encoding analysis of the reference blocks (sizes only).
+    E0 {
+        #[arg(long, default_value = "http://127.0.0.1:8080")]
+        log: String,
+        #[arg(long, default_value = "../configs/testbed-c1-blocks.json")]
+        blocks: PathBuf,
+        /// Only these blocks (comma-separated); default all.
+        #[arg(long, value_delimiter = ',')]
+        only: Option<Vec<u64>>,
+        #[arg(long)]
         out: PathBuf,
         #[arg(long, default_value_t = 8)]
         concurrency: usize,
@@ -158,6 +215,22 @@ async fn main() -> anyhow::Result<()> {
                 std::process::exit(1);
             }
             Ok(())
+        }
+        Cmd::Blocks { log, block_log2, out, concurrency } => {
+            bench::blocks(&log, block_log2, &out, concurrency).await
+        }
+        Cmd::Bench { log, arm, block, blocks, concurrency, trial_id, events, summary, meta } => {
+            let ok = bench::bench(bench::BenchArgs {
+                log, arm, block, blocks_file: blocks, concurrency, trial_id, events, summary, meta,
+            })
+            .await?;
+            if !ok {
+                std::process::exit(2);
+            }
+            Ok(())
+        }
+        Cmd::E0 { log, blocks, only, out, concurrency } => {
+            e0::run(&log, &blocks, only, &out, concurrency).await
         }
     }
 }

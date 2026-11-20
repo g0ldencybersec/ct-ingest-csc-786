@@ -110,6 +110,72 @@ snapshot's SHA-256, the CompactLog commit and image, and the slice provenance.
 If CompactLog cannot pass, the fallback is a local Sunlight log with the
 Sunglasses RFC 6962 proxy in front of it (still identical data).
 
+## Experiments: E0 and C1
+
+Two DigitalOcean droplets in the same region and VPC:
+
+| Role | Size | Image | Runs |
+|---|---|---|---|
+| Log server | s-4vcpu-8gb | snapshot `ct-testbed-c1-1m-20261101` | CompactLog (pinned tree), `scripts/server-ctl.sh` |
+| Client | s-2vcpu-4gb | Ubuntu 24.04 | `ctt`, `scripts/run-c1.sh`, `scripts/netem.sh` |
+
+The client reaches the log over the private VPC address. The cloud firewall
+allows TCP 8080 and 22 on the server only from the client droplet (plus SSH
+from the experimenter).
+
+**Arms.** `legacy-gzip` (RFC 6962 with `Accept-Encoding: gzip`) vs. `tiles`
+(gzip data tiles plus issuers) is the primary operational comparison.
+`legacy-identity` is a diagnostic. Every request records the
+`Content-Encoding` the server actually returned and how many gzip layers the
+body had.
+
+**Trial.** Each trial reads one aligned block of 131,072 entries (512 tiles)
+and must reproduce that block's Merkle subtree root from
+`configs/testbed-c1-blocks.json`. A trial that returns wrong or missing data
+fails.
+
+**Design.** A unit is (replicate, network, cache). Each unit picks one random
+block and runs all arms on it in random order, giving paired comparisons.
+Units run in seeded random order.
+- Networks: `lan` (VPC as-is) and `wan` (25 ms each way, 50 Mbit/s each way,
+  emulated by netem on the client).
+- Cache states:
+  - `cold`: log restarted, OS page cache dropped, 30 s read throttle waited out.
+  - `warm`: the same read is done once, unrecorded, just before the trial.
+
+**Caveat for interpretation.** The testbed is a uniform random sample of
+Sycamore 2026h1, re-sequenced by CompactLog. Cache behavior and compression
+ratios on it may differ from a production log's natural sequence. Results
+are reported with the sample and cache state stated.
+
+### Runbook
+
+```sh
+# 1. Server (from snapshot): update code, start the log, check the pin
+cd /opt/ct && git pull && (cd testbed && docker compose up -d)
+./scripts/server-ctl.sh check
+
+# 2. Client: provision (pinned Rust, netem modules, build, SSH key)
+git clone https://github.com/g0ldencybersec/ct-ingest-csc-786 /opt/ct
+/opt/ct/scripts/client-setup.sh      # then add the printed key on the server
+
+# 3. Client: reference blocks (once; commit the file)
+export SERVER=<server private IP>
+cd /opt/ct/harness && ./target/release/ctt blocks --log http://$SERVER:8080
+
+# 4. Client: E0 (byte counts only, ~10 min)
+./target/release/ctt e0 --log http://$SERVER:8080 --out ../runs/e0-$(date -u +%Y%m%d).json
+
+# 5. Client: C1 campaign (resumable; run inside tmux)
+cd /opt/ct && ./scripts/run-c1.sh
+
+# 6. Anywhere: analysis
+python3 analysis/analyze.py --e0 runs/e0-*.json --c1 'runs/c1-*' --out runs/analysis
+```
+
+`harness/tests/mocklog.py` serves a synthetic log through both APIs for
+testing the harness without a testbed.
+
 ## Testbed behaviors that affect measurement
 
 Found by reading CompactLog at the pinned commit (`1ceab9f`):
