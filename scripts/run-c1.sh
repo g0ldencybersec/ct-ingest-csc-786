@@ -37,7 +37,7 @@ RUN="${RUN:-$ROOT/runs/c1-$(date -u +%Y%m%d-%H%M)}"
 mkdir -p "$RUN/events" "$RUN/primes"
 
 die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
-rctl() { ssh -i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$SSH_TARGET" "/opt/ct/scripts/server-ctl.sh $*"; }
+rctl() { ssh -n -i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$SSH_TARGET" "/opt/ct/scripts/server-ctl.sh $*"; }
 net() { SERVER="$SERVER" "$ROOT/scripts/netem.sh" "$@"; }
 trap 'net lan || true' EXIT
 
@@ -90,7 +90,8 @@ echo "run: $RUN  ($TOTAL trials)"
 done_ok() { [ -f "$RUN/events/$1.summary.json" ] && grep -q '"verified": true' "$RUN/events/$1.summary.json"; }
 
 n=0
-tail -n +2 "$RUN/plan.tsv" | while IFS=$'\t' read -r tid unit rep netp cache arm block pos; do
+# Read the plan on fd 3 so nothing in the loop (ssh, ctt, ping) can consume it.
+while IFS=$'\t' read -r -u 3 tid unit rep netp cache arm block pos; do
   n=$((n + 1))
   if done_ok "$tid"; then continue; fi
   printf '\n[%d/%d] %s  net=%s cache=%s block=%s\n' "$n" "$TOTAL" "$tid" "$netp" "$cache" "$block"
@@ -141,7 +142,7 @@ s["exit_code"] = int(rc)
 with open(out, "a") as f:
     f.write(json.dumps(s) + "\n")
 PY
-done
+done 3< <(tail -n +2 "$RUN/plan.tsv")
 
 echo
 echo "campaign finished: $RUN"
