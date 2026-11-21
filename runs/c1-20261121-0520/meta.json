@@ -1,0 +1,43 @@
+{
+  "experiment": "C1",
+  "seed": 786,
+  "reps": 10,
+  "concurrency": 4,
+  "arms": [
+    "legacy-gzip",
+    "tiles",
+    "legacy-identity"
+  ],
+  "nets": [
+    "lan",
+    "wan"
+  ],
+  "caches": [
+    "cold",
+    "warm"
+  ],
+  "wan_profile": {
+    "delay_each_way": "25ms",
+    "rate_each_way": "50mbit"
+  },
+  "server": {
+    "ok": true,
+    "hostname": "CompactLogServer",
+    "kernel": "5.15.0-203-generic",
+    "nproc": 8,
+    "mem_kib": 16371972,
+    "docker": "29.7.2",
+    "image": "sha256:ef1bed0d12ff496608317efd08797cccbf78685390ed8312997ea0686ad554cc",
+    "cache_mb": 1024,
+    "compose_file": "docker-compose.yml:docker-compose.server.yml",
+    "git_commit": "c635497"
+  },
+  "client": {
+    "kernel": "6.8.0-149-generic",
+    "nproc": 2,
+    "mem_kib": 4009848,
+    "ctt_version": "ctt 0.1.0",
+    "git_commit": "c635497"
+  },
+  "blocks_file": "configs/testbed-c1-blocks.json"
+}

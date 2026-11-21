@@ -1,0 +1,49 @@
+{
+  "accept_encoding_sent": "identity",
+  "arm": "legacy-identity",
+  "block": 1,
+  "block_root_b64": "kLk0obwXOpNQ0KDxou+n7jvOoKlPHv5nah4UgPtpsI8=",
+  "by_kind": {
+    "get-entries": {
+      "content_encoding_received": {
+        "none": 132
+      },
+      "decoded_bytes": 714703680,
+      "gzip_layers": {
+        "0": 132
+      },
+      "requests": 132,
+      "retries": 0,
+      "ttfb_ms_median": 107.74121000000014,
+      "wire_bytes": 714703680
+    }
+  },
+  "client": {
+    "cpu_share": {
+      "busy_frac": 0.47775346462436175,
+      "steal_frac": 0.0
+    },
+    "cpu_sys_secs": 1.0002069999999998,
+    "cpu_user_secs": 5.462158,
+    "max_rss_kib": 53088,
+    "nproc": 2
+  },
+  "concurrency": 4,
+  "decoded_bytes": 714703680,
+  "distinct_issuers": 67,
+  "entries": 131072,
+  "entries_per_sec": 18802.751965797004,
+  "failures": [],
+  "first_index": 131072,
+  "harness_version": "0.1.0",
+  "meta": {},
+  "precert": 1487,
+  "requests": 132,
+  "retries": 0,
+  "started_at": "2026-11-21T06:35:40.270203799+00:00",
+  "trial_id": "u021-legacy-identity-prime",
+  "verified": true,
+  "wall_secs": 6.970894486,
+  "wire_bytes": 714703680,
+  "x509": 129585
+}

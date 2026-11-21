@@ -1,0 +1,62 @@
+{
+  "accept_encoding_sent": "gzip",
+  "arm": "tiles",
+  "block": 4,
+  "block_root_b64": "8jwDlwGOJ6BnnNSf7uGUrkMOXdBrm1fbCHUIRIIxjFA=",
+  "by_kind": {
+    "issuer": {
+      "content_encoding_received": {
+        "gzip": 131
+      },
+      "decoded_bytes": 154919,
+      "gzip_layers": {
+        "1": 131
+      },
+      "requests": 131,
+      "retries": 0,
+      "ttfb_ms_median": 1.3352960000001985,
+      "wire_bytes": 138549
+    },
+    "tile": {
+      "content_encoding_received": {
+        "gzip": 512
+      },
+      "decoded_bytes": 192214549,
+      "gzip_layers": {
+        "1": 512
+      },
+      "requests": 512,
+      "retries": 0,
+      "ttfb_ms_median": 28.42081900000005,
+      "wire_bytes": 112422034
+    }
+  },
+  "client": {
+    "cpu_share": {
+      "busy_frac": 0.25725338491295935,
+      "steal_frac": 0.0
+    },
+    "cpu_sys_secs": 0.20191900000000002,
+    "cpu_user_secs": 2.4414059999999997,
+    "max_rss_kib": 17788,
+    "nproc": 2
+  },
+  "concurrency": 4,
+  "decoded_bytes": 192369468,
+  "distinct_issuers": 131,
+  "entries": 131072,
+  "entries_per_sec": 25096.637107360813,
+  "failures": [],
+  "first_index": 524288,
+  "harness_version": "0.1.0",
+  "meta": {},
+  "precert": 18235,
+  "requests": 643,
+  "retries": 0,
+  "started_at": "2026-11-21T05:45:41.924670975+00:00",
+  "trial_id": "u008-tiles-prime",
+  "verified": true,
+  "wall_secs": 5.222691767,
+  "wire_bytes": 112560583,
+  "x509": 112837
+}
