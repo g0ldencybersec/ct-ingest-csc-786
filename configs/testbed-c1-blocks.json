@@ -1,0 +1,72 @@
+{
+  "tree_size": 1000192,
+  "root_hash_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+  "block_log2": 17,
+  "blocks": [
+    {
+      "block": 0,
+      "first": 0,
+      "entries": 131072,
+      "root_b64": "G6q8aLrtGdZ6rnGyZrhbQIm0cR5IsoYd4EFdpNuunN0=",
+      "x509": 125146,
+      "precert": 5926,
+      "distinct_issuers": 100
+    },
+    {
+      "block": 1,
+      "first": 131072,
+      "entries": 131072,
+      "root_b64": "kLk0obwXOpNQ0KDxou+n7jvOoKlPHv5nah4UgPtpsI8=",
+      "x509": 129585,
+      "precert": 1487,
+      "distinct_issuers": 67
+    },
+    {
+      "block": 2,
+      "first": 262144,
+      "entries": 131072,
+      "root_b64": "AHn7dPhW3FJAAiL9TQhWiiJAeYI3vdD4tseQZ02gObo=",
+      "x509": 125071,
+      "precert": 6001,
+      "distinct_issuers": 105
+    },
+    {
+      "block": 3,
+      "first": 393216,
+      "entries": 131072,
+      "root_b64": "mvnfh2NK81xhnSNwCzKDtXVyVw9roIG8wdzhTOyIOXQ=",
+      "x509": 125992,
+      "precert": 5080,
+      "distinct_issuers": 138
+    },
+    {
+      "block": 4,
+      "first": 524288,
+      "entries": 131072,
+      "root_b64": "8jwDlwGOJ6BnnNSf7uGUrkMOXdBrm1fbCHUIRIIxjFA=",
+      "x509": 112837,
+      "precert": 18235,
+      "distinct_issuers": 131
+    },
+    {
+      "block": 5,
+      "first": 655360,
+      "entries": 131072,
+      "root_b64": "lJNScHpBXuzZieB1Gi3uF/g0sU0ZT6saLkrIUCaeOHQ=",
+      "x509": 100043,
+      "precert": 31029,
+      "distinct_issuers": 139
+    },
+    {
+      "block": 6,
+      "first": 786432,
+      "entries": 131072,
+      "root_b64": "pl81MyfQKK5p9UYQ7byJiLnNkvKi7qM7oye1lJhtEKk=",
+      "x509": 29484,
+      "precert": 101588,
+      "distinct_issuers": 189
+    }
+  ],
+  "computed_at": "2026-11-21T03:13:59.504913649+00:00",
+  "note": "Merkle subtree roots of aligned blocks (internal nodes of the pinned tree). No certificate content."
+}

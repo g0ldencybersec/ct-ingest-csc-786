@@ -1,0 +1,318 @@
+{
+  "blocks": [
+    {
+      "block": 0,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 124500,
+        "issuer_served_bytes": 111977,
+        "issuers": 100,
+        "legacy_b64_chars": 705753728,
+        "legacy_base64_overhead_bytes": 176753790,
+        "legacy_binary_gzip6_bytes": 140070399,
+        "legacy_chain_certs": 280685,
+        "legacy_extra_chain_bytes": 345722319,
+        "legacy_extra_precert_bytes": 7198732,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 188136659,
+        "legacy_gzip_served_bytes": 188136659,
+        "legacy_json_bytes": 710211892,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 176078887,
+        "legacy_raw_bytes": 528999938,
+        "legacy_requests": 132,
+        "precert": 5926,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 192259539,
+        "tile_fingerprint_bytes": 9244064,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 7198732,
+        "tile_requests": 512,
+        "tile_served_bytes": 121042388,
+        "tile_timestamped_entry_bytes": 175816743,
+        "x509": 125146
+      }
+    },
+    {
+      "block": 1,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 81090,
+        "issuer_served_bytes": 72921,
+        "issuers": 67,
+        "legacy_b64_chars": 710245516,
+        "legacy_base64_overhead_bytes": 177878961,
+        "legacy_binary_gzip6_bytes": 136108666,
+        "legacy_chain_certs": 266739,
+        "legacy_extra_chain_bytes": 348195635,
+        "legacy_extra_precert_bytes": 1786648,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 173749545,
+        "legacy_gzip_served_bytes": 173749545,
+        "legacy_json_bytes": 714703680,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 182384272,
+        "legacy_raw_bytes": 532366555,
+        "legacy_requests": 132,
+        "precert": 1487,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 192706568,
+        "tile_fingerprint_bytes": 8797792,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 1786648,
+        "tile_requests": 512,
+        "tile_served_bytes": 126685986,
+        "tile_timestamped_entry_bytes": 182122128,
+        "x509": 129585
+      }
+    },
+    {
+      "block": 2,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 128008,
+        "issuer_served_bytes": 114785,
+        "issuers": 105,
+        "legacy_b64_chars": 696656508,
+        "legacy_base64_overhead_bytes": 174474644,
+        "legacy_binary_gzip6_bytes": 133819730,
+        "legacy_chain_certs": 277996,
+        "legacy_extra_chain_bytes": 344553780,
+        "legacy_extra_precert_bytes": 6686966,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 182259576,
+        "legacy_gzip_served_bytes": 182259576,
+        "legacy_json_bytes": 701114672,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 170941118,
+        "legacy_raw_bytes": 522181864,
+        "legacy_requests": 132,
+        "precert": 6001,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 186523956,
+        "tile_fingerprint_bytes": 9158016,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 6686966,
+        "tile_requests": 512,
+        "tile_served_bytes": 114426911,
+        "tile_timestamped_entry_bytes": 170678974,
+        "x509": 125071
+      }
+    },
+    {
+      "block": 3,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 168982,
+        "issuer_served_bytes": 151966,
+        "issuers": 138,
+        "legacy_b64_chars": 700069536,
+        "legacy_base64_overhead_bytes": 175327034,
+        "legacy_binary_gzip6_bytes": 138182019,
+        "legacy_chain_certs": 273451,
+        "legacy_extra_chain_bytes": 343077145,
+        "legacy_extra_precert_bytes": 5620906,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 185490528,
+        "legacy_gzip_served_bytes": 185490528,
+        "legacy_json_bytes": 704527700,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 176044451,
+        "legacy_raw_bytes": 524742502,
+        "legacy_requests": 132,
+        "precert": 5080,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 190415789,
+        "tile_fingerprint_bytes": 9012576,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 5620906,
+        "tile_requests": 512,
+        "tile_served_bytes": 120136016,
+        "tile_timestamped_entry_bytes": 175782307,
+        "x509": 125992
+      }
+    },
+    {
+      "block": 4,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 154919,
+        "issuer_served_bytes": 138549,
+        "issuers": 131,
+        "legacy_b64_chars": 685745156,
+        "legacy_base64_overhead_bytes": 171734928,
+        "legacy_binary_gzip6_bytes": 149894355,
+        "legacy_chain_certs": 290046,
+        "legacy_extra_chain_bytes": 331077151,
+        "legacy_extra_precert_bytes": 19018141,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 218171083,
+        "legacy_gzip_served_bytes": 218171083,
+        "legacy_json_bytes": 690203320,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 163914936,
+        "legacy_raw_bytes": 514010228,
+        "legacy_requests": 132,
+        "precert": 18235,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 192214549,
+        "tile_fingerprint_bytes": 9543616,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 19018141,
+        "tile_requests": 512,
+        "tile_served_bytes": 112422034,
+        "tile_timestamped_entry_bytes": 163652792,
+        "x509": 112837
+      }
+    },
+    {
+      "block": 5,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 168523,
+        "issuer_served_bytes": 151389,
+        "issuers": 139,
+        "legacy_b64_chars": 689701284,
+        "legacy_base64_overhead_bytes": 172724022,
+        "legacy_binary_gzip6_bytes": 138728851,
+        "legacy_chain_certs": 289012,
+        "legacy_extra_chain_bytes": 334376351,
+        "legacy_extra_precert_bytes": 31435004,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 217372618,
+        "legacy_gzip_served_bytes": 217372618,
+        "legacy_json_bytes": 694159448,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 151165907,
+        "legacy_raw_bytes": 516977262,
+        "legacy_requests": 132,
+        "precert": 31029,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 191849295,
+        "tile_fingerprint_bytes": 9510528,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 31435004,
+        "tile_requests": 512,
+        "tile_served_bytes": 103933572,
+        "tile_timestamped_entry_bytes": 150903763,
+        "x509": 100043
+      }
+    },
+    {
+      "block": 6,
+      "sizes": {
+        "entries": 131072,
+        "issuer_der_bytes": 226386,
+        "issuer_served_bytes": 203426,
+        "issuers": 189,
+        "legacy_b64_chars": 736812624,
+        "legacy_base64_overhead_bytes": 184478175,
+        "legacy_binary_gzip6_bytes": 130815584,
+        "legacy_chain_certs": 286139,
+        "legacy_extra_chain_bytes": 332292779,
+        "legacy_extra_precert_bytes": 102959458,
+        "legacy_gzip_content_encodings": {
+          "gzip": 132
+        },
+        "legacy_gzip_local6_bytes": 255936402,
+        "legacy_gzip_served_bytes": 255936402,
+        "legacy_json_bytes": 741270788,
+        "legacy_json_framing_bytes": 4458164,
+        "legacy_leaf_input_bytes": 117082212,
+        "legacy_raw_bytes": 552334449,
+        "legacy_requests": 132,
+        "precert": 101588,
+        "tile_content_encodings": {
+          "gzip": 512
+        },
+        "tile_decoded_bytes": 229198118,
+        "tile_fingerprint_bytes": 9418592,
+        "tile_gzip_layers": {
+          "1": 512
+        },
+        "tile_precert_bytes": 102959458,
+        "tile_requests": 512,
+        "tile_served_bytes": 93263614,
+        "tile_timestamped_entry_bytes": 116820068,
+        "x509": 29484
+      }
+    }
+  ],
+  "computed_at": "2026-11-21T03:27:15.178463828+00:00",
+  "experiment": "E0 offline encoding analysis (byte counts only)",
+  "harness_version": "0.1.0",
+  "root_hash_b64": "qMdOSE2uu/VkQzFvdpWDXsw+Z0BSXITf/zie5GG7PPM=",
+  "total": {
+    "entries": 917504,
+    "issuer_der_bytes": 1052408,
+    "issuer_served_bytes": 945013,
+    "issuers": 869,
+    "legacy_b64_chars": 4924984352,
+    "legacy_base64_overhead_bytes": 1233371554,
+    "legacy_binary_gzip6_bytes": 967619604,
+    "legacy_chain_certs": 1964068,
+    "legacy_extra_chain_bytes": 2379295160,
+    "legacy_extra_precert_bytes": 174705855,
+    "legacy_gzip_content_encodings": {
+      "gzip": 924
+    },
+    "legacy_gzip_local6_bytes": 1421116411,
+    "legacy_gzip_served_bytes": 1421116411,
+    "legacy_json_bytes": 4956191500,
+    "legacy_json_framing_bytes": 31207148,
+    "legacy_leaf_input_bytes": 1137611783,
+    "legacy_raw_bytes": 3691612798,
+    "legacy_requests": 924,
+    "precert": 169346,
+    "tile_content_encodings": {
+      "gzip": 3584
+    },
+    "tile_decoded_bytes": 1375167814,
+    "tile_fingerprint_bytes": 64685184,
+    "tile_gzip_layers": {
+      "1": 3584
+    },
+    "tile_precert_bytes": 174705855,
+    "tile_requests": 3584,
+    "tile_served_bytes": 791910521,
+    "tile_timestamped_entry_bytes": 1135776775,
+    "x509": 748158
+  },
+  "tree_size": 1000192
+}
