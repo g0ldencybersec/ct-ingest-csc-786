@@ -17,7 +17,11 @@
 #   REPS    replicates per (net, cache) cell, default 10
 #
 # Resumable: finished, verified trials are skipped. Writes to $RUN/:
-#   plan.tsv, meta.json, trials.jsonl (one line per trial), events/, primes/
+#   plan.tsv, meta.json, trials.jsonl (one line per attempt), crashes.jsonl,
+#   events/, primes/
+#
+# If the log crashes, the crash is recorded, the log restarted and checked
+# against the pin, and the trial retried (MAX_ATTEMPTS, default 2).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,7 +31,7 @@ SSH_KEY="${SSH_KEY:-$HOME/.ssh/ct_server}"
 LOG="http://$SERVER:8080"
 REPS="${REPS:-10}"
 SEED="${SEED:-786}"
-CONC="${CONC:-8}"
+CONC="${CONC:-4}"
 ARMS="${ARMS:-legacy-gzip tiles legacy-identity}"
 NETS="${NETS:-lan wan}"
 CACHES="${CACHES:-cold warm}"
@@ -46,6 +50,10 @@ trap 'net lan || true' EXIT
 [ "$(id -u)" = 0 ] || die "run as root (netem needs it)"
 
 net lan
+if ! rctl snap | grep -q '"running":true'; then
+  echo "log is down at start; restarting it"
+  rctl recover >/dev/null || die "could not restart the log"
+fi
 rctl check >/dev/null || die "server check failed (log down or not the pinned tree)"
 
 # ---- plan (only created once per run directory) -----------------------------
@@ -89,59 +97,115 @@ echo "run: $RUN  ($TOTAL trials)"
 
 done_ok() { [ -f "$RUN/events/$1.summary.json" ] && grep -q '"verified": true' "$RUN/events/$1.summary.json"; }
 
+# ---- crash handling ----------------------------------------------------------
+# If the log dies (e.g. OOM-killed), record it in crashes.jsonl, restart it,
+# check it still serves the pinned tree, and retry the trial (MAX_ATTEMPTS).
+MAX_ATTEMPTS="${MAX_ATTEMPTS:-2}"
+log_up() { rctl snap 2>/dev/null | grep -q '"running":true'; }
+recover() {  # $1 trial id, $2 phase, $3 attempt
+  net lan
+  local snapj info
+  snapj="$(rctl snap 2>/dev/null || echo '{}')"
+  echo "  !! log is down during $2 of $1; restarting"
+  info="$(rctl recover)" || die "log could not be recovered after crash in $1"
+  python3 - "$RUN/crashes.jsonl" "$1" "$2" "$3" "$snapj" "$info" <<'PY'
+import json, sys, datetime
+out, tid, phase, att, snap, info = sys.argv[1:7]
+def j(x):
+    try: return json.loads(x)
+    except Exception: return x
+rec = {"t": datetime.datetime.now(datetime.timezone.utc).isoformat(), "trial_id": tid,
+       "phase": phase, "attempt": int(att), "snap_at_detection": j(snap), "recover": j(info)}
+open(out, "a").write(json.dumps(rec) + "\n")
+PY
+}
+
 n=0
 # Read the plan on fd 3 so nothing in the loop (ssh, ctt, ping) can consume it.
 while IFS=$'\t' read -r -u 3 tid unit rep netp cache arm block pos; do
   n=$((n + 1))
   if done_ok "$tid"; then continue; fi
-  printf '\n[%d/%d] %s  net=%s cache=%s block=%s\n' "$n" "$TOTAL" "$tid" "$netp" "$cache" "$block"
 
-  net lan
-  if [ "$cache" = cold ]; then
-    rctl cold >/dev/null
-  else
-    rctl ready >/dev/null
+  attempt=0
+  while :; do
+    attempt=$((attempt + 1))
+    printf '\n[%d/%d] %s  net=%s cache=%s block=%s%s\n' "$n" "$TOTAL" "$tid" "$netp" "$cache" "$block" \
+      "$([ $attempt -gt 1 ] && echo "  (attempt $attempt)")"
+
+    net lan
+    if ! log_up; then recover "$tid" "pre-trial" "$attempt"; fi
+    if [ "$cache" = cold ]; then
+      rctl cold >/dev/null || { recover "$tid" "cold-reset" "$attempt"; [ $attempt -lt "$MAX_ATTEMPTS" ] && continue; echo "  giving up on $tid"; break; }
+    else
+      rctl ready >/dev/null || { recover "$tid" "ready" "$attempt"; [ $attempt -lt "$MAX_ATTEMPTS" ] && continue; echo "  giving up on $tid"; break; }
+      if ! "$CTT" bench --log "$LOG" --arm "$arm" --block "$block" --blocks "$BLOCKS_FILE" \
+          --concurrency "$CONC" --trial-id "$tid-prime" \
+          --events /dev/null --summary "$RUN/primes/$tid.json" 2>/dev/null; then
+        if log_up; then die "priming read failed for $tid with the log up (see $RUN/primes/$tid.json)"; fi
+        recover "$tid" "prime" "$attempt"
+        [ $attempt -lt "$MAX_ATTEMPTS" ] && continue
+        echo "  giving up on $tid after $attempt attempts"; break
+      fi
+      rctl idle >/dev/null
+    fi
+
+    net "$netp"
+    RTT="$(net rtt || echo null)"
+    BEFORE="$(rctl snap)"
+    rm -f "$RUN/events/$tid.summary.json"
+    set +e
     "$CTT" bench --log "$LOG" --arm "$arm" --block "$block" --blocks "$BLOCKS_FILE" \
-      --concurrency "$CONC" --trial-id "$tid-prime" \
-      --events /dev/null --summary "$RUN/primes/$tid.json" 2>/dev/null || die "priming read failed for $tid"
-    rctl idle >/dev/null
-  fi
+      --concurrency "$CONC" --trial-id "$tid" \
+      --events "$RUN/events/$tid.jsonl" --summary "$RUN/events/$tid.summary.json" \
+      --meta "unit=$unit" --meta "rep=$rep" --meta "net=$netp" --meta "cache=$cache" --meta "position=$pos" \
+      --meta "attempt=$attempt"
+    rc=$?
+    set -e
+    AFTER="$(rctl snap || echo '{}')"
+    net lan
 
-  net "$netp"
-  RTT="$(net rtt || echo null)"
-  BEFORE="$(rctl snap)"
-  set +e
-  "$CTT" bench --log "$LOG" --arm "$arm" --block "$block" --blocks "$BLOCKS_FILE" \
-    --concurrency "$CONC" --trial-id "$tid" \
-    --events "$RUN/events/$tid.jsonl" --summary "$RUN/events/$tid.summary.json" \
-    --meta "unit=$unit" --meta "rep=$rep" --meta "net=$netp" --meta "cache=$cache" --meta "position=$pos"
-  rc=$?
-  set -e
-  AFTER="$(rctl snap)"
-  net lan
-
-  python3 - "$RUN/events/$tid.summary.json" "$BEFORE" "$AFTER" "${RTT:-null}" "$RUN/trials.jsonl" "$rc" <<'PY'
+    python3 - "$RUN/events/$tid.summary.json" "$BEFORE" "$AFTER" "${RTT:-null}" "$RUN/trials.jsonl" "$rc" "$tid" "$attempt" <<'PY'
 import json, sys
-p, b, a, rtt, out, rc = sys.argv[1:7]
+p, b, a, rtt, out, rc, tid, att = sys.argv[1:9]
 try:
     s = json.load(open(p))
 except Exception:
-    s = {"verified": False, "failures": [f"ctt exited {rc} without a summary"]}
-b, a = json.loads(b), json.loads(a)
-dt = a["proc_stat"]["total"] - b["proc_stat"]["total"]
+    s = {"trial_id": tid, "verified": False, "failures": [f"ctt exited {rc} without a summary"]}
+def j(x):
+    try: return json.loads(x)
+    except Exception: return {}
+b, a = j(b), j(a)
+def g(d, *ks):
+    for k in ks:
+        d = d.get(k) if isinstance(d, dict) else None
+    return d
+dt = (g(a, "proc_stat", "total") or 0) - (g(b, "proc_stat", "total") or 0)
+cb, ca = g(b, "cpu_usage_usec"), g(a, "cpu_usage_usec")
 s["server"] = {
-    "cpu_secs": (a["cpu_usage_usec"] - b["cpu_usage_usec"]) / 1e6 if b["cpu_usage_usec"] is not None else None,
-    "steal_frac": (a["proc_stat"]["steal"] - b["proc_stat"]["steal"]) / dt if dt else None,
-    "busy_frac": 1 - (a["proc_stat"]["idle"] - b["proc_stat"]["idle"]) / dt if dt else None,
-    "mem_bytes_after": a["mem_bytes"],
-    "restarted_during_trial": a["started_at"] != b["started_at"],
-    "uptime_secs_before": b["uptime_secs"],
+    "cpu_secs": (ca - cb) / 1e6 if None not in (ca, cb) else None,
+    "steal_frac": (g(a, "proc_stat", "steal") - g(b, "proc_stat", "steal")) / dt if dt > 0 else None,
+    "busy_frac": 1 - (g(a, "proc_stat", "idle") - g(b, "proc_stat", "idle")) / dt if dt > 0 else None,
+    "mem_bytes_before": g(b, "mem_bytes"),
+    "mem_bytes_after": g(a, "mem_bytes"),
+    "running_after": g(a, "running"),
+    "restarted_during_trial": g(a, "running") is not True or g(a, "started_at") != g(b, "started_at"),
+    "uptime_secs_before": g(b, "uptime_secs"),
 }
 s["rtt_ms_measured"] = None if rtt in ("", "null") else float(rtt)
 s["exit_code"] = int(rc)
+s["attempt"] = int(att)
 with open(out, "a") as f:
     f.write(json.dumps(s) + "\n")
 PY
+
+    if [ "$rc" = 0 ]; then break; fi
+    if ! log_up; then
+      recover "$tid" "trial" "$attempt"
+      [ $attempt -lt "$MAX_ATTEMPTS" ] && continue
+    fi
+    echo "  trial $tid failed (exit $rc) after $attempt attempt(s); moving on"
+    break
+  done
 done 3< <(tail -n +2 "$RUN/plan.tsv")
 
 echo

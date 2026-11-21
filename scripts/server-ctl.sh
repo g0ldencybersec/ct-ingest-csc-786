@@ -10,6 +10,8 @@
 #                          30 s read throttle, check pin, wait idle
 #   server-ctl.sh ready    like check, and also waits until the log has been
 #                          up for longer than the read-throttle window
+#   server-ctl.sh recover  after a crash: record how the log exited, start it
+#                          again, then the same checks as cold
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,7 +20,9 @@ PIN="$ROOT/configs/testbed-c1.json"
 THROTTLE_SECS=35   # CompactLog limits reads for 30 s after start; 5 s margin
 
 die() { printf '{"ok":false,"error":"%s"}\n' "$*"; exit 1; }
-cid() { (cd "$ROOT/testbed" && docker compose ps -q compactlog); }
+# -a: also find the container when it has exited (e.g. OOM-killed).
+cid() { (cd "$ROOT/testbed" && docker compose ps -aq compactlog); }
+running() { [ "$(docker inspect -f '{{.State.Running}}' "$(cid)" 2>/dev/null)" = true ]; }
 
 cgroup_dir() {
   local id; id="$(docker inspect -f '{{.Id}}' "$(cid)")"
@@ -29,7 +33,7 @@ cgroup_dir() {
 }
 
 cpu_usec() {
-  local d; d="$(cgroup_dir)"
+  local d; d="$(cgroup_dir 2>/dev/null)"
   [ -n "$d" ] && awk '/^usage_usec/{print $2}' "$d/cpu.stat" || echo null
 }
 
@@ -71,12 +75,19 @@ wait_idle() {
 }
 
 snap() {
-  local d mem="null"; d="$(cgroup_dir)"
-  [ -n "$d" ] && [ -f "$d/memory.current" ] && mem="$(cat "$d/memory.current")"
+  # Always valid JSON, also when the log is down.
+  local d="" mem="null" cpu="null" up="null" run=false oom ooms="null"
+  if running; then
+    run=true
+    d="$(cgroup_dir)"; up="$(uptime_secs)"; cpu="$(cpu_usec)"
+    [ -n "$d" ] && [ -f "$d/memory.current" ] && mem="$(cat "$d/memory.current")"
+    [ -n "$d" ] && [ -f "$d/memory.events" ] && ooms="$(awk '/^oom_kill /{print $2}' "$d/memory.events")"
+  fi
+  oom="$(docker inspect -f '{{.State.OOMKilled}}' "$(cid)" 2>/dev/null || echo null)"
   read -r _ u n s i w q sq st _ < /proc/stat
-  printf '{"ok":true,"t":%s,"started_at":"%s","uptime_secs":%s,"cpu_usage_usec":%s,"mem_bytes":%s,"proc_stat":{"total":%s,"idle":%s,"steal":%s},"loadavg":"%s"}\n' \
-    "$(date +%s.%N)" "$(docker inspect -f '{{.State.StartedAt}}' "$(cid)")" "$(uptime_secs)" \
-    "$(cpu_usec)" "$mem" "$((u+n+s+i+w+q+sq+st))" "$((i+w))" "$st" "$(cut -d' ' -f1-3 /proc/loadavg)"
+  printf '{"ok":true,"t":%s,"running":%s,"oom_killed":%s,"started_at":"%s","uptime_secs":%s,"cpu_usage_usec":%s,"mem_bytes":%s,"cgroup_oom_kills":%s,"proc_stat":{"total":%s,"idle":%s,"steal":%s},"loadavg":"%s"}\n' \
+    "$(date +%s.%N)" "$run" "${oom:-null}" "$(docker inspect -f '{{.State.StartedAt}}' "$(cid)" 2>/dev/null)" "$up" \
+    "$cpu" "$mem" "${ooms:-null}" "$((u+n+s+i+w+q+sq+st))" "$((i+w))" "$st" "$(cut -d' ' -f1-3 /proc/loadavg)"
 }
 
 case "${1:-}" in
@@ -102,5 +113,12 @@ case "${1:-}" in
     wait_health; sleep "$THROTTLE_SECS"; check_pin; wait_idle
     echo '{"ok":true}'
     ;;
-  *) sed -n '2,14p' "$0"; exit 2 ;;
+  recover)
+    exit_info="$(docker inspect -f 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} finished={{.State.FinishedAt}}' "$(cid)" 2>/dev/null || true)"
+    was_running=false; running && was_running=true
+    (cd "$ROOT/testbed" && docker compose up -d compactlog >/dev/null 2>&1)
+    wait_health; sleep "$THROTTLE_SECS"; check_pin; wait_idle
+    printf '{"ok":true,"was_running":%s,"previous":"%s"}\n' "$was_running" "$exit_info"
+    ;;
+  *) sed -n '2,16p' "$0"; exit 2 ;;
 esac

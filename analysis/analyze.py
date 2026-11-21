@@ -258,7 +258,24 @@ def c1_section(dirs):
     for k in sorted(enc):
         md.append(f"| {k[0]} | {k[1]} | {k[2]} | " + ", ".join(f"{e}: {c:,}" for e, c in sorted(enc[k].items())) + " |")
 
-    return "\n".join(md), {"descriptive": desc, "paired": paired, "excluded": dict(excluded),
+    # Server crashes recorded by the runner (log OOM-killed or otherwise down).
+    crashes = []
+    for d in dirs:
+        cp = os.path.join(d, "crashes.jsonl")
+        if os.path.exists(cp):
+            crashes += [json.loads(l) for l in open(cp) if l.strip()]
+    if crashes:
+        by = defaultdict(int)
+        for c in crashes:
+            arm = next((a for a in ("legacy-identity", "legacy-gzip", "tiles") if c["trial_id"].endswith(a)), "?")
+            prev = str((c.get("recover") or {}).get("previous", "")) if isinstance(c.get("recover"), dict) else ""
+            by[(arm, c["phase"], "oom=true" in prev)] += 1
+        md += ["", f"### Log crashes during the campaign ({len(crashes)})\n",
+               "| Arm | Phase | OOM-killed | Count |", "|---|---|---|---:|"]
+        for (arm, ph, oom), n in sorted(by.items()):
+            md.append(f"| {arm} | {ph} | {'yes' if oom else 'no/unknown'} | {n} |")
+
+    return "\n".join(md), {"descriptive": desc, "paired": paired, "excluded": dict(excluded), "crashes": crashes,
                            "encodings": {"|".join(k): dict(v) for k, v in enc.items()}}, cells, units
 
 
