@@ -7,9 +7,9 @@
 # - No auto-restart: a crash during a trial must be visible, not hidden.
 # - Memory limit: leaves headroom for the OS. Set per droplet size with
 #   CT_MEM_LIMIT in testbed/.env (default 6g for 8 GiB; 14g for 16 GiB).
-#   CompactLog allocates ~1.5 GiB of heap per concurrent request on cold
-#   reads (measured 2026-11-21: 0.3 -> 6 GiB in 2 s at 4 requests), so the
-#   8 GiB droplet was OOM-killed on cold reads; C1 runs on 16 GiB.
+#   Concurrent reads on a freshly started log allocate without bound (see
+#   warm_index in scripts/server-ctl.sh); C1 warms the index after every
+#   restart, after which peak heap stayed ~1.5 GiB at 4 requests in flight.
 # - Server config with a larger, explicit cache (Config.server.toml).
 services:
   compactlog:

@@ -6,8 +6,11 @@
 #   server-ctl.sh check    log healthy and serving exactly the pinned tree
 #   server-ctl.sh snap     counters: container CPU, /proc/stat, start time
 #   server-ctl.sh idle     wait until CompactLog is idle (<5% of one core)
-#   server-ctl.sh cold     stop log, drop OS page cache, start, wait out the
-#                          30 s read throttle, check pin, wait idle
+#   server-ctl.sh cold     stop log, drop OS page cache, start, warm the
+#                          database index (see warm), wait out the 30 s
+#                          read throttle, check pin, wait idle
+#   server-ctl.sh warm     warm the storage index: sequential 1-entry reads
+#                          at a 4,096-entry stride (~245 requests)
 #   server-ctl.sh ready    like check, and also waits until the log has been
 #                          up for longer than the read-throttle window
 #   server-ctl.sh recover  after a crash: record how the log exited, start it
@@ -63,6 +66,30 @@ print(int((datetime.datetime.now(datetime.timezone.utc) - t).total_seconds()))
 PY
 }
 
+# CompactLog's get-entries issues one storage lookup per entry, all at once
+# (1,000 per request). On a freshly started log every lookup loads SST index
+# and filter blocks independently, so concurrent cold reads allocate without
+# bound (measured: 0.3 -> 6 GiB heap in 2 s at 4 requests in flight; OOM).
+# Upstream throttles reads to 5 for 30 s after start for this reason ("cache
+# warmup period"). We warm the index explicitly with sequential single-entry
+# reads, so a "cold" trial means: process restarted, OS page cache dropped,
+# index warm, certificate data not cached.
+warm_index() {
+  local n i k=0
+  n="$(python3 -c "import json;print(json.load(open('$PIN'))['tree_size'])")"
+  for ((i = 0; i < n; i += 4096)); do
+    curl -fsS -o /dev/null "$LOG/ct/v1/get-entries?start=$i&end=$i" || die "warm-up read failed at $i"
+    k=$((k + 1))
+  done
+  echo "$k"
+}
+
+wait_throttle() {
+  local up; up="$(uptime_secs)"
+  [ "$up" -lt "$THROTTLE_SECS" ] && sleep $((THROTTLE_SECS - up))
+  return 0
+}
+
 wait_idle() {
   local a b t0=$SECONDS
   while :; do
@@ -102,22 +129,22 @@ case "${1:-}" in
   snap) snap ;;
   idle) wait_idle; echo '{"ok":true}' ;;
   ready)
-    wait_health; check_pin
-    up="$(uptime_secs)"; [ "$up" -lt "$THROTTLE_SECS" ] && sleep $((THROTTLE_SECS - up))
+    wait_health; check_pin; wait_throttle
     echo '{"ok":true}'
     ;;
+  warm) wait_health; printf '{"ok":true,"warm_requests":%s}\n' "$(warm_index)" ;;
   cold)
     (cd "$ROOT/testbed" && docker compose stop compactlog >/dev/null 2>&1)
     sync; echo 3 > /proc/sys/vm/drop_caches
     (cd "$ROOT/testbed" && docker compose start compactlog >/dev/null 2>&1)
-    wait_health; sleep "$THROTTLE_SECS"; check_pin; wait_idle
-    echo '{"ok":true}'
+    wait_health; k="$(warm_index)"; wait_throttle; check_pin; wait_idle
+    printf '{"ok":true,"warm_requests":%s}\n' "$k"
     ;;
   recover)
     exit_info="$(docker inspect -f 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} finished={{.State.FinishedAt}}' "$(cid)" 2>/dev/null || true)"
     was_running=false; running && was_running=true
     (cd "$ROOT/testbed" && docker compose up -d compactlog >/dev/null 2>&1)
-    wait_health; sleep "$THROTTLE_SECS"; check_pin; wait_idle
+    wait_health; warm_index >/dev/null; wait_throttle; check_pin; wait_idle
     printf '{"ok":true,"was_running":%s,"previous":"%s"}\n' "$was_running" "$exit_info"
     ;;
   *) sed -n '2,16p' "$0"; exit 2 ;;

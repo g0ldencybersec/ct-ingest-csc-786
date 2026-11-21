@@ -32,8 +32,9 @@ enabled = false
 # History: 2048 MB was used first. With it, CompactLog was OOM-killed at the
 # 6 GiB container limit twice (2026-11-21 00:40 UTC reading all tiles at 8
 # concurrent requests; 04:23 UTC during a C1 cold trial at 8 concurrent
-# requests; anon RSS 3.2 / 2.7 GiB at kill). C1 therefore runs with 1024 MB
-# and client concurrency 4. Both kills are reported as a serving-
-# implementation finding.
+# requests; anon RSS 3.2 / 2.7 GiB at kill). Root cause was cold-start read
+# amplification, not the cache (see warm_index in scripts/server-ctl.sh);
+# C1 runs with 1024 MB, client concurrency 4, and an index warm-up after
+# every restart. The kills are reported as a serving-implementation finding.
 [cache]
 memory_block_cache_capacity_mb = 1024
