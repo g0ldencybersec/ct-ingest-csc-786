@@ -1,0 +1,30 @@
+// Report Figure 1 (system architecture). Render: dot -Tpng -Gdpi=220 docs/architecture.dot -o architecture.png
+digraph G {
+  rankdir=LR; nodesep=0.25; ranksep=0.45;
+  node [shape=box, style="rounded,filled", fontname="Liberation Sans", fontsize=10, fillcolor="#FFFFFF", color="#4A5568", penwidth=1.1, margin="0.12,0.06"];
+  edge [fontname="Liberation Sans", fontsize=9, color="#4A5568", arrowsize=0.7];
+
+  src [label="Let's Encrypt Sycamore 2026h1\n(public Static CT log)\n926M entries", fillcolor="#F2F2F2"];
+
+  subgraph cluster_client {
+    label="Client droplet  (2 vCPU / 4 GB, Ubuntu 24.04)"; fontname="Liberation Sans"; fontsize=10; style="rounded"; color="#2F5FA8"; penwidth=1.3;
+    runner [label="run-c1.sh\nrandomized paired plan,\ncrash recovery"];
+    netem  [label="tc netem + ifb\nlan: VPC as-is\nwan: 25 ms + 50 Mbit/s\neach way"];
+    bench  [label="ctt bench / e0\nlegacy-gzip | legacy-identity | tiles"];
+    core   [label="ctcore\ndecode both APIs,\nMerkle frontier,\nsubtree-root check", fillcolor="#E3EAF5"];
+    out    [label="events.jsonl + summary.json\n→ analysis/analyze.py", fillcolor="#F2F2F2"];
+    runner -> bench; bench -> core; core -> out; runner -> netem [style=dashed, arrowhead=none];
+  }
+
+  subgraph cluster_server {
+    label="Log server droplet  (8 vCPU / 16 GB during C1, Docker)"; fontname="Liberation Sans"; fontsize=10; style="rounded"; color="#B0521A"; penwidth=1.3;
+    cl   [label="CompactLog 1ceab9f\nRFC 6962 + Static CT\nover one SlateDB tree\n1,000,192 entries (pinned)", fillcolor="#FBEBDD"];
+    ctl  [label="server-ctl.sh\ncold reset, index warm-up,\nCPU / memory snapshots"];
+    ctl -> cl [style=dashed];
+  }
+
+  setup [label="ctt fetch (seed 786, 3,907 tiles)\n→ ctt replay → gonogo → pin", fillcolor="#F2F2F2"];
+  src -> setup [label=" one-time build"]; setup -> cl;
+  bench -> cl [label=" HTTP over VPC\n(get-entries | tiles + issuers)", dir=both, color="#2F5FA8"];
+  runner -> ctl [label=" SSH", style=dashed];
+}

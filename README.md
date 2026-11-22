@@ -173,6 +173,16 @@ cd /opt/ct && ./scripts/run-c1.sh
 python3 analysis/analyze.py --e0 runs/e0-*.json --c1 'runs/c1-*' --out runs/analysis
 ```
 
+### Where the report's tables and figures come from
+
+| Report item | Produced by | Output |
+|---|---|---|
+| Figure 1 (architecture) | `dot -Tpng -Gdpi=220 docs/architecture.dot -o architecture.png` | hand-written diagram source |
+| Table 2 (E0) | `analysis/analyze.py --e0 runs/e0-20261121.json` | `runs/analysis/results.md`, "E0" |
+| Tables 3–4, Figure 2 (C1) | `analysis/analyze.py --c1 runs/c1-20261121-0520` | `results.md`, "C1"; `c1-summary.png` |
+
+Everything is computed from the committed run files; nothing is entered by hand.
+
 `harness/tests/mocklog.py` serves a synthetic log through both APIs for
 testing the harness without a testbed.
 

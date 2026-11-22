@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""Analysis of E0 and C1 results. Standard library only (matplotlib optional,
-for figures).
+"""Turns the raw E0 and C1 results into the tables and figures in the report.
+Standard library only (matplotlib for figures).
 
-  python3 analysis/analyze.py --e0 runs/e0-*.json --c1 runs/c1-* --out runs/analysis
+  python3 analysis/analyze.py --e0 runs/e0-20261121.json --c1 runs/c1-20261121-0520 --out runs/analysis
 
-Writes <out>/results.md (tables), <out>/results.json (numbers), and figures
-if matplotlib is installed.
+Writes <out>/results.md (every table), <out>/results.json (the same numbers),
+and the figures, including c1-summary.png (report Figure 2).
 
-C1 statistics: within each unit (same block, network, cache state), arms are
-paired. For each metric we report the median of per-unit ratios
-(tiles / legacy-gzip primary; legacy-identity / legacy-gzip diagnostic), a 95%
-percentile-bootstrap CI of that median (10,000 resamples, fixed seed), and an
-exact two-sided Wilcoxon signed-rank test on log ratios.
+How the C1 statistics work, in plain terms:
+  * Pairs. In each "unit" the same block is read through every arm under the
+    same network and cache conditions, so arms are compared pair by pair.
+  * Paired ratio. For each pair: tiles' cost / legacy-gzip's cost. Below 1
+    means tiles was cheaper. We report the median of the 10 ratios per cell.
+  * Bootstrap 95% CI. Draw 10 ratios at random (with replacement) from the 10
+    we measured, take their median, repeat 10,000 times; the middle 95% of
+    those medians is the interval. It shows how much the median could move
+    if we had gotten a slightly different set of trials.
+  * Wilcoxon signed-rank test. Asks whether the ratios fall consistently on
+    one side of 1, more than chance would allow. With 10 pairs, all 10 on the
+    same side gives the smallest possible p-value, 0.002.
 """
 import argparse, glob, json, math, os, random, statistics
 from collections import defaultdict
@@ -315,6 +322,49 @@ def figures(cells, units, out):
     return files
 
 
+def summary_figure(cells, out):
+    """Report Figure 2: wall time, client CPU and server CPU, one box per arm
+    per condition (each box = the 10 trials of that cell)."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return None
+    plt.rcParams.update({"font.family": "sans-serif", "font.sans-serif": ["Arial", "Liberation Sans", "DejaVu Sans"], "font.size": 8.5})
+    conds = [("lan", "cold"), ("lan", "warm"), ("wan", "cold"), ("wan", "warm")]
+    arms = ["legacy-gzip", "tiles", "legacy-identity"]
+    col = {"legacy-gzip": "#2F5FA8", "tiles": "#E07A2E", "legacy-identity": "#B8BFCA"}
+    mets = [("Wall time (s)", lambda t: t["wall_secs"]),
+            ("Client CPU (s)", lambda t: t["client"]["cpu_user_secs"] + t["client"]["cpu_sys_secs"]),
+            ("Server CPU (s)", lambda t: (t.get("server") or {}).get("cpu_secs"))]
+    fig, axs = plt.subplots(1, 3, figsize=(7.2, 2.5))
+    w = 0.26
+    for ax, (name, f) in zip(axs, mets):
+        for i, a in enumerate(arms):
+            data = [[f(t) for t in cells.get((n, c, a), []) if f(t) is not None] or [float("nan")] for n, c in conds]
+            pos = [j + (i - 1) * w for j in range(len(conds))]
+            bp = ax.boxplot(data, positions=pos, widths=w * 0.85, patch_artist=True,
+                            medianprops={"color": "#14213D", "lw": 1.2}, flierprops={"markersize": 2.5},
+                            whiskerprops={"lw": 0.8}, capprops={"lw": 0.8}, boxprops={"lw": 0.6})
+            for b in bp["boxes"]:
+                b.set_facecolor(col[a])
+        ax.set_xticks(range(len(conds)))
+        ax.set_xticklabels([f"{n.upper()}\n{c}" for n, c in conds])
+        ax.set_title(name, fontsize=9)
+        ax.set_ylim(bottom=0)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.grid(axis="y", lw=0.4, color="#DDDDDD")
+        ax.set_axisbelow(True)
+    h = [plt.Rectangle((0, 0), 1, 1, fc=col[a]) for a in arms]
+    fig.legend(h, arms, loc="upper center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 1.02))
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    p = os.path.join(out, "c1-summary.png")
+    fig.savefig(p, dpi=250)
+    plt.close(fig)
+    return p
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--e0", help="E0 report JSON")
@@ -331,6 +381,9 @@ def main():
         t, j, cells, units = c1_section(dirs)
         md.append(t); js["c1"] = j
         figs = figures(cells, units, a.out)
+        sf = summary_figure(cells, a.out)
+        if sf:
+            figs.append(sf)
         if figs:
             md.append("\nFigures: " + ", ".join(os.path.basename(f) for f in figs))
     open(os.path.join(a.out, "results.md"), "w").write("\n\n".join(md) + "\n")
